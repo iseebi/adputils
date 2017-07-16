@@ -1,0 +1,76 @@
+#!/usr/bin/env ruby
+require 'optparse'
+require 'spaceship'
+require 'pit'
+
+adp_login = ENV['ADP_LOGIN']
+if adp_login
+  a = adp.split(':', 2)
+  adp_login_user = a[0]
+  adp_login_password = a[1]
+else
+  adp_login_user = ENV['ADP_LOGIN_USER']
+  adp_login_password = ENV['ADP_LOGIN_PASSWORD']
+end
+
+if adp_login_user == nil || adp_login_user == '' || adp_login_password == nil || adp_login_password == ''
+  config = Pit.get('developer.apple.com', :require => {
+    'email' => '',
+    'password' => ''
+  })
+  adp_login_user = config['email']
+  adp_login_password = config['password']
+end
+
+params = ARGV.getopts('t:', 'team:')
+profile_filter = ARGV
+
+client = Spaceship::Portal.login(adp_login_user, adp_login_password)
+
+team = params['team'] || params['t']
+if team
+  client.team_id = team
+else
+  Spaceship::Portal.select_team
+end
+
+registed_device_ids = client.devices.map {|d| d['deviceId'] }
+registed_certificate_ids = {:dev => [], :prd => []}
+Spaceship::Portal::Certificate.all.each do |c|
+  if c.class == Spaceship::Portal::Certificate::Production
+    registed_certificate_ids[:prd] << c.id
+  elsif c.class == Spaceship::Portal::Certificate::Development
+    registed_certificate_ids[:dev] << c.id
+  end
+end
+
+profiles = client.provisioning_profiles.select {|p| (profile_filter.length == 0) || profile_filter.any? {|v| v == p['name'] } }
+
+profiles.each do |profile|
+  profile_id = profile['provisioningProfileId']
+  detail = client.provisioning_profile_details(provisioning_profile_id: profile_id)
+  name = detail['name']
+  app_id = detail['appIdId']
+  distribution_method = detail['distributionMethod']
+  distribution_type = detail['distributionType']
+  current_devices = detail['deviceIds'].sort
+  current_certificates = detail['certificateIds'].sort
+
+  devices = registed_device_ids.sort
+  if distribution_method == 'store'
+    if distribution_type == 'store'
+      devices = []
+    end
+    certificates = registed_certificate_ids[:prd].sort
+  else
+    certificates = registed_certificate_ids[:dev].sort
+  end
+  
+  need_repair = (detail['status'] == 'Invalid') || (certificates != current_certificates) || (devices != current_devices)
+  if !need_repair
+    next
+  end
+
+  puts "repairing #{name}"
+  client.repair_provisioning_profile!(profile_id, name, distribution_method, app_id, certificates, devices)
+end

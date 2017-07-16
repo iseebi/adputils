@@ -92,6 +92,7 @@ GEM
     multipart-post (2.0.0)
     nanaimo (0.2.3)
     os (0.9.6)
+    pit (0.0.7)
     plist (3.3.0)
     public_suffix (2.0.5)
     representable (3.0.4)
@@ -133,6 +134,7 @@ PLATFORMS
 
 DEPENDENCIES
   fastlane
+  pit
 
 RUBY VERSION
    ruby 2.3.1p112
