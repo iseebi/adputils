@@ -26,6 +26,16 @@ repair_profiles [-t TEAM_ID] [profile_name] ...
 
 `profile_name` を指定すると、その名前のプロファイルのみを対象にできる。
 
+## redownload_profiles
+
+指定した名前のプロビジョニングプロファイルをダウンロードし、決まった場所に配備する。
+
+```
+redownload_profiles [-t TEAM_ID] [profile_name] ...
+```
+
+指定した名前のプロビジョニングプロファイルがすでに存在している場合はすべて削除する。
+
 ## sync\_deploygate_devices
 
 DeployGate の登録リクエストに上がってきている端末を Apple Developer Program に登録する。
@@ -36,6 +46,8 @@ sync_deploygate_devices [-t TEAM_ID] [-u DEPLOYGATE_USER_ID] [-k DEPLOYGATE_API_
 
 - -u は `DEPLOYGATE_USER` と -k は `DEPLOYGATE_API_KEY` をそれぞれ環境変数で指定することで省略できる。
 - -n に ADP 登録名のプレフィクスを指定することができる。
+
+
 
 ## License
 

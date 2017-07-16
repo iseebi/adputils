@@ -1,0 +1,70 @@
+#!/usr/bin/env ruby
+require_relative 'lib/adp'
+require 'optparse'
+require 'plist'
+
+params = ARGV.getopts('t:', 'team:')
+team = params['team'] || params['t']
+target_names = ARGV
+
+service = AdpService.new
+client = service.create_client(team)
+
+Dir.glob(ENV['HOME'] + '/Library/MobileDevice/Provisioning Profiles/*.mobileprovision').each do |path|
+  plain_plist = `security cms -D -i '#{path}' 2> /dev/null`
+  plist = Plist.parse_xml(plain_plist)
+  name = plist['Name']
+  if target_names.any? {|n| n == name }
+    puts "delete #{path}"
+    File.delete(path)
+  end
+end
+
+profiles = client.provisioning_profiles.select {|p| target_names.any? {|v| v == p['name'] } }
+profiles.each do |profile|
+  name = profile['name']
+  target_path = ENV['HOME'] + '/Library/MobileDevice/Provisioning Profiles/' + profile['UUID'] + '.mobileprovision'
+  puts "download #{name} to #{target_path}"
+  File.write(target_path, client.download_provisioning_profile(profile['provisioningProfileId']))
+end
+
+#registed_device_ids = client.devices.map {|d| d['deviceId'] }
+#registed_certificate_ids = {:dev => [], :prd => []}
+#Spaceship::Portal::Certificate.all.each do |c|
+#  if c.class == Spaceship::Portal::Certificate::Production
+#    registed_certificate_ids[:prd] << c.id
+#  elsif c.class == Spaceship::Portal::Certificate::Development
+#    registed_certificate_ids[:dev] << c.id
+#  end
+#end
+#
+#profiles = client.provisioning_profiles.select {|p| (profile_filter.length == 0) || profile_filter.any? {|v| v == p['name'] } }
+#
+#profiles.each do |profile|
+#  profile_id = profile['provisioningProfileId']
+#  detail = client.provisioning_profile_details(provisioning_profile_id: profile_id)
+#  name = detail['name']
+#  app_id = detail['appIdId']
+#  distribution_method = detail['distributionMethod']
+#  distribution_type = detail['distributionType']
+#  current_devices = detail['deviceIds'].sort
+#  current_certificates = detail['certificateIds'].sort
+#
+#  devices = registed_device_ids.sort
+#  if distribution_method == 'store'
+#    if distribution_type == 'store'
+#      devices = []
+#    end
+#    certificates = registed_certificate_ids[:prd].sort
+#  else
+#    certificates = registed_certificate_ids[:dev].sort
+#  end
+#  
+#  need_repair = (detail['status'] == 'Invalid') || (certificates != current_certificates) || (devices != current_devices)
+#  if !need_repair
+#    next
+#  end
+#
+#  puts "repairing #{name}"
+#  client.repair_provisioning_profile!(profile_id, name, distribution_method, app_id, certificates, devices)
+#end
