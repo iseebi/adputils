@@ -1,0 +1,43 @@
+#!/usr/bin/env ruby
+require_relative 'lib/adp'
+require 'optparse'
+require 'httpclient'
+require 'json'
+
+params = ARGV.getopts('t:k:u:p:i:n:', 'team:', 'deploygate_key:', 'deploygate_user:', 'platform:', 'app_id:', 'name_prefix:')
+team = params['team'] || params['t']
+dp_key = params['deploygate_key'] || params['k'] || ENV['DEPLOYGATE_API_KEY']
+dp_user = params['deploygate_user'] || params['u'] || ENV['DEPLOYGATE_USER']
+platform = params['platform'] || params['p'] || 'ios'
+app_id = params['app_id'] || params['i']
+name_prefix = params['name_prefix'] || params['n']
+
+service = AdpService.new
+client = service.create_client(team)
+
+url = sprintf('https://deploygate.com/api/users/%s/platforms/%s/apps/%s/udids?token=%s', dp_user, platform, app_id, dp_key)
+http_client = HTTPClient.new
+response = http_client.get(url)
+result = JSON.parse(response.body)['results']
+
+target_devices = []
+result.each do |device|
+  if device['is_provisioned']
+    next
+  end
+  name = ""
+  if name_prefix != nil && name_prefix != ""
+    name += name_prefix + " "
+  end
+  name += device['user_name'].gsub(/[\[\]]/, '') + " " + device['device_name']
+  target_devices << {
+    :name => name,
+    :udid => device['udid']
+  }
+end
+
+target_devices.each do |device|
+  puts "Create device #{device[:name]} (#{device[:udid]})"
+  client.create_device!(device[:name], device[:udid])
+end
+

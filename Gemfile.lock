@@ -134,6 +134,8 @@ PLATFORMS
 
 DEPENDENCIES
   fastlane
+  httpclient
+  json
   pit
 
 RUBY VERSION
