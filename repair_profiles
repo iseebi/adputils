@@ -9,7 +9,7 @@ profile_filter = ARGV
 service = AdpService.new
 client = service.create_client(team)
 
-registed_device_ids = client.devices.map {|d| d['deviceId'] }
+registed_device_ids = client.devices.select{|d| d['deviceClass'] != 'tvOS'}.map {|d| d['deviceId'] }
 registed_certificate_ids = {:dev => [], :prd => []}
 Spaceship::Portal::Certificate.all.each do |c|
   if c.class == Spaceship::Portal::Certificate::Production
@@ -22,6 +22,9 @@ end
 profiles = client.provisioning_profiles.select {|p| (profile_filter.length == 0) || profile_filter.any? {|v| v == p['name'] } }
 
 profiles.each do |profile|
+  if profile['type'] =~ /^tvOS/
+    next
+  end
   profile_id = profile['provisioningProfileId']
   detail = client.provisioning_profile_details(provisioning_profile_id: profile_id)
   name = detail['name']
