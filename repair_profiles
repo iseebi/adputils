@@ -10,10 +10,12 @@ service = AdpService.new
 client = service.create_client(team)
 
 registed_device_ids = client.devices.select{|d| d['deviceClass'] != 'tvOS'}.map {|d| d['deviceId'] }
-registed_certificate_ids = {:dev => [], :prd => []}
+registed_certificate_ids = {:dev => [], :prd => [], :inhouse => []}
 Spaceship::Portal::Certificate.all.each do |c|
   if c.class == Spaceship::Portal::Certificate::Production
     registed_certificate_ids[:prd] << c.id
+  elsif c.class == Spaceship::Portal::Certificate::InHouse
+    registed_certificate_ids[:inhouse] << c.id
   elsif c.class == Spaceship::Portal::Certificate::Development
     registed_certificate_ids[:dev] << c.id
   end
@@ -40,6 +42,11 @@ profiles.each do |profile|
       devices = []
     end
     certificates = registed_certificate_ids[:prd].sort
+  elsif distribution_type == 'inhouse'
+    if distribution_type == 'inhouse'
+      devices = []
+    end
+    certificates = registed_certificate_ids[:inhouse].sort
   else
     certificates = registed_certificate_ids[:dev].sort
   end
