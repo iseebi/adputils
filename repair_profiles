@@ -16,6 +16,7 @@ Spaceship::Portal::Certificate.all.each do |c|
     registed_certificate_ids[:prd] << c.id
   elsif c.class == Spaceship::Portal::Certificate::InHouse
     registed_certificate_ids[:inhouse] << c.id
+    registed_certificate_ids[:prd] << c.id
   elsif c.class == Spaceship::Portal::Certificate::Development
     registed_certificate_ids[:dev] << c.id
   end
