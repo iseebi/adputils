@@ -43,7 +43,7 @@ profiles.each do |profile|
       devices = []
     end
     certificates = registed_certificate_ids[:prd].sort
-  elsif distribution_type == 'inhouse'
+  elsif distribution_method == 'inhouse'
     if distribution_type == 'inhouse'
       devices = []
     end
@@ -52,7 +52,7 @@ profiles.each do |profile|
     certificates = registed_certificate_ids[:dev].sort
   end
   
-  need_repair = (detail['status'] == 'Invalid') || (certificates != current_certificates) || (devices != current_devices)
+  need_repair = (detail['status'] != 'Active') || (certificates != current_certificates) || (devices != current_devices)
   if !need_repair
     next
   end
