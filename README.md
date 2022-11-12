@@ -1,3 +1,9 @@
+# This repository is archived
+
+現状作者はこのツールに頼らなければならないほど大規模に運用しておらず、メンテナンスできていないため、アーカイブしました。
+
+-----------------
+
 # Apple Developer Program Utilities
 
 Apple Developer Progaram の各種作業をサポートするツール。
